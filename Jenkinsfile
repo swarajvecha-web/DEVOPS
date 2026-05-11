@@ -3,15 +3,9 @@ pipeline {
 
     stages {
 
-        stage('Clone Repository') {
+        stage('Build Containers') {
             steps {
-                echo 'Pulling latest source code...'
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                sh 'docker build -t expense-tracker .'
+                sh 'docker compose build'
             }
         }
 
