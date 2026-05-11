@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: expense_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://user:password@db:5432/expense_db
+      ALGORITHM: HS256
+      SECRET_KEY: change-me
+      CORS_ORIGIN: http://localhost:3000
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+volumes:
+  postgres_data:
+
