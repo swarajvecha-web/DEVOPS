@@ -89,7 +89,10 @@ EOF
 
         stage('Deploy To Kubernetes') {
             steps {
-                sh 'kubectl --kubeconfig=/tmp/kubeconfig.yaml apply --validate=false --force -f k8s/'
+                sh '''
+                kubectl --kubeconfig=/tmp/kubeconfig.yaml delete -f k8s/ --ignore-not-found=true
+                kubectl --kubeconfig=/tmp/kubeconfig.yaml apply -f k8s/
+                '''
             }
         }
     }
