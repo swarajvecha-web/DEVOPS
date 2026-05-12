@@ -163,3 +163,7 @@ async def Aichat(req: chat, user_id: int = Depends(get_current_user)):
         return {"response": result["output"]}
         
     return {"response": f"An unknown error occurred. Raw output structure mismatch."}
+
+
+    # this is end of the file
+    # sadjkasd
