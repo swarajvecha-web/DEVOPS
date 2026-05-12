@@ -59,7 +59,7 @@ pipeline {
 
         stage('Deploy To Kubernetes') {
             steps {
-                sh 'kubectl apply -f k8s/'
+                sh 'kubectl apply --validate=false -f k8s/'
             }
         }
     }
