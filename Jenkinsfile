@@ -90,7 +90,9 @@ EOF
         stage('Deploy To Kubernetes') {
             steps {
                 sh '''
-                kubectl --kubeconfig=/tmp/kubeconfig.yaml delete -f k8s/ --ignore-not-found=true
+                kubectl --kubeconfig=/tmp/kubeconfig.yaml delete -f k8s/ --ignore-not-found=true --wait=true
+                echo "Waiting for resources to fully terminate..."
+                sleep 10
                 kubectl --kubeconfig=/tmp/kubeconfig.yaml apply -f k8s/
                 '''
             }
