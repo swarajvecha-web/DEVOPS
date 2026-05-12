@@ -53,13 +53,38 @@ pipeline {
 
         stage('Configure kubectl') {
             steps {
-                sh 'aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME'
+                sh '''
+                TOKEN=$(aws eks get-token --cluster-name $EKS_CLUSTER_NAME --region $AWS_REGION | python3 -c "import sys,json; print(json.load(sys.stdin)['status']['token'])")
+                SERVER=$(aws eks describe-cluster --name $EKS_CLUSTER_NAME --region $AWS_REGION --query "cluster.endpoint" --output text)
+                CA=$(aws eks describe-cluster --name $EKS_CLUSTER_NAME --region $AWS_REGION --query "cluster.certificateAuthority.data" --output text)
+
+                cat > /tmp/kubeconfig.yaml <<EOF
+apiVersion: v1
+kind: Config
+clusters:
+- cluster:
+    server: ${SERVER}
+    certificate-authority-data: ${CA}
+  name: expense-cluster
+contexts:
+- context:
+    cluster: expense-cluster
+    user: aws-user
+  name: expense-cluster
+current-context: expense-cluster
+users:
+- name: aws-user
+  user:
+    token: ${TOKEN}
+EOF
+                echo "Kubeconfig created successfully"
+                '''
             }
         }
 
         stage('Deploy To Kubernetes') {
             steps {
-                sh 'kubectl apply --validate=false -f k8s/'
+                sh 'kubectl --kubeconfig=/tmp/kubeconfig.yaml apply -f k8s/'
             }
         }
     }
