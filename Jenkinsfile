@@ -2,11 +2,12 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION         = 'ap-south-1'
-        BACKEND_ECR        = credentials('BACKEND_ECR')
-        FRONTEND_ECR       = credentials('FRONTEND_ECR')
-        AWS_ACCESS_KEY_ID  = credentials('AWS_ACCESS_KEY_ID')
+        AWS_REGION            = 'ap-south-1'
+        BACKEND_ECR           = credentials('BACKEND_ECR')
+        FRONTEND_ECR          = credentials('FRONTEND_ECR')
+        AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+        EKS_CLUSTER_NAME      = 'expense-cluster'
     }
 
     stages {
@@ -47,6 +48,12 @@ pipeline {
         stage('Push Frontend Image') {
             steps {
                 sh 'docker push $FRONTEND_ECR:latest'
+            }
+        }
+
+        stage('Configure kubectl') {
+            steps {
+                sh 'aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME'
             }
         }
 
