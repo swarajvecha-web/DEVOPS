@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: 299139630689.dkr.ecr.ap-south-1.amazonaws.com/expense-backend:latest
+        image: 385105852446.dkr.ecr.ap-south-1.amazonaws.com/expense-backend:latest
 
         ports:
         - containerPort: 8000
