@@ -12,12 +12,6 @@ pipeline {
 
     stages {
 
-        stage('Fix Docker Permissions') {
-            steps {
-                sh 'sudo chmod 666 /var/run/docker.sock'
-            }
-        }
-
         stage('Login to AWS ECR') {
             steps {
                 sh '''
