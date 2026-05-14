@@ -12,6 +12,16 @@ pipeline {
 
     stages {
 
+        stage('Fix Docker Permissions') {
+            steps {
+                sh '''
+                chmod 666 /var/run/docker.sock
+                echo "Docker socket permissions fixed"
+                docker --version
+                '''
+            }
+        }
+
         stage('Login to AWS ECR') {
             steps {
                 sh '''
