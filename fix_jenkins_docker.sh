@@ -1,36 +1,28 @@
 #!/bin/bash
+# Run this script ONCE on your Jenkins EC2 server as root (sudo bash fix_jenkins_docker.sh)
 set -e
 
-echo "=== Fixing broken packages ==="
-apt-get install -y -f
-
-echo "=== Installing prerequisites ==="
-apt-get install -y ca-certificates curl gnupg lsb-release
-
-echo "=== Adding Docker GPG key ==="
-install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-chmod a+r /etc/apt/keyrings/docker.gpg
-
-echo "=== Adding Docker repo ==="
-ARCH=$(dpkg --print-architecture)
-CODENAME=$(lsb_release -cs)
-echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${CODENAME} stable" > /etc/apt/sources.list.d/docker.list
-
-echo "=== Installing Docker CE CLI + Compose plugin ==="
-apt-get update -qq
-apt-get install -y docker-ce-cli docker-compose-plugin
-
-echo "=== Installing docker-compose standalone ==="
-curl -SL https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
-chmod +x /usr/local/bin/docker-compose
-
-echo "=== Setting socket permissions ==="
-chmod 666 /var/run/docker.sock
+echo "=== Step 1: Add jenkins user to docker group ==="
 usermod -aG docker jenkins
 
-echo "=== Verifying ==="
-docker --version
-docker-compose --version
+echo "=== Step 2: Fix docker socket permissions immediately ==="
+chmod 666 /var/run/docker.sock
 
-echo "ALL DONE!"
+echo "=== Step 3: Allow jenkins to run chmod on docker.sock without password ==="
+SUDOERS_LINE="jenkins ALL=(ALL) NOPASSWD: /bin/chmod 666 /var/run/docker.sock"
+SUDOERS_FILE="/etc/sudoers.d/jenkins-docker"
+
+if ! grep -qF "$SUDOERS_LINE" "$SUDOERS_FILE" 2>/dev/null; then
+    echo "$SUDOERS_LINE" > "$SUDOERS_FILE"
+    chmod 440 "$SUDOERS_FILE"
+    echo "Sudoers rule added: $SUDOERS_FILE"
+else
+    echo "Sudoers rule already exists, skipping."
+fi
+
+echo "=== Step 4: Restart Jenkins to apply group changes ==="
+systemctl restart jenkins
+
+echo ""
+echo "ALL DONE! Jenkins can now use Docker."
+echo "Re-trigger your Jenkins pipeline now."
